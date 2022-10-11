@@ -222,7 +222,7 @@ ORDER BY 2
 -----BONUS QUESTIONS-----
 -------------------------
 
---1) Join All The Things
+-- 1. Join All The Things
 
 SELECT
     s.customer_id,
@@ -241,3 +241,32 @@ ON me.product_id = s.product_id
 LEFT JOIN dannys_diner.members mem
 ON s.customer_id = mem.customer_id
 ORDER BY 1,2
+
+-- 2. Rank All The Things
+WITH t1 as (SELECT
+    s.customer_id,
+    s.order_date,
+    me.product_name,
+    me.price,
+    (
+        CASE
+        WHEN s.order_date >= mem.join_date THEN 'Y'
+        ELSE 'N'
+        END
+    ) as member_
+FROM dannys_diner.sales S
+JOIN dannys_diner.menu me
+ON me.product_id = s.product_id
+LEFT JOIN dannys_diner.members mem
+ON s.customer_id = mem.customer_id
+ORDER BY 1,2)
+
+SELECT 
+	*,
+    (
+      CASE 
+      WHEN member_ = 'Y' THEN DENSE_RANK() OVER(PARTITION BY customer_id, member_ ORDER BY order_date)
+      ELSE NULL
+      END
+    ) as ranking
+FROM t1
